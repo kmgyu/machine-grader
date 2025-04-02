@@ -147,7 +147,7 @@ def results():
                                     # prediction=y,
                                     # probability=round(proba*100, 2))
         else: # login failed
-            flash('비밀번호가 틀렸습니다.')
+            flash('비밀번호가 틀렸습니다.', category='error')
             return redirect('/')
         
     return render_template('reviewform.html')
