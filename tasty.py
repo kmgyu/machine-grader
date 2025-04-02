@@ -41,19 +41,19 @@ def sqlite_entry(path, document, y):
     conn.close()
 
 
-def login(student_number, password):
+def login(student_number, student_name, password):
     password = hashlib.sha256(password.encode()).hexdigest()
     if User.query.filter_by(userid=student_number).first():
         user = User.query.filter_by(userid=student_number).first()
         # login susccess
-        if user.password == password:
+        if user.username == student_name and user.password == password:
             return True
         # login failed
         else:
             return False
     else:
         # signup success
-        if signup(student_number, password):
+        if signup(student_number, student_name, password):
             return True
         # signup failed
         else: return False
@@ -143,9 +143,9 @@ def results():
         # print('fuck')
         
         student_number = request.form['student_id']
-        condition = login(request.form['student_id'], request.form['password'])
+        condition = login(request.form['student_id'], request.form['student_name'], request.form['password'])
         
-        if login(request.form['student_id'], request.form['password']):
+        if login(request.form['student_id'], request.form['student_name'], request.form['password']):
             # print(request.files)
             
             # save file
@@ -164,7 +164,7 @@ def results():
                                     # prediction=y,
                                     # probability=round(proba*100, 2))
         else: # login failed
-            flash('비밀번호가 틀렸습니다.')
+            flash('비밀번호가 틀렸거나 이름이 틀립니다.')
             return redirect('/')
         
     return render_template('reviewform.html')
