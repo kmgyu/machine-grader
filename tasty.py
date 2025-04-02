@@ -58,9 +58,9 @@ def login(student_number, password):
         # signup failed
         else: return False
         
-def signup(student_number, password):
+def signup(student_number, student_name, password):
     try:
-        new_user = User(userid=student_number, password = password)
+        new_user = User(userid=student_number, username=student_name, password = password)
         
         db.session.add(new_user)
         db.session.commit()
@@ -80,7 +80,7 @@ def save_score(student_number, score_value):
     """점수를 새로 저장 (기존 점수와 상관없이 무조건 추가)"""
     user = User.query.filter_by(userid=student_number).first()  # 학생 번호로 User 찾기
     if user:  
-        new_score = Score(userid=user.userid, score=score_value)  # user.id 저장
+        new_score = Score(userid=user.userid, username=user.username, score=score_value)  # user.id 저장
         db.session.add(new_score)
         db.session.commit()
     else:
@@ -140,22 +140,25 @@ def results():
     # form = UploadForm()
     # print(load(request.form))
     if request.method == 'POST' and 'answer' in request.files and request.files['answer'].filename != '':
-        print('fuck')
+        # print('fuck')
         
         student_number = request.form['student_id']
+        condition = login(request.form['student_id'], request.form['password'])
+        
         if login(request.form['student_id'], request.form['password']):
             # print(request.files)
             
             # save file
-            
-            request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_id']+'.csv')
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y.%m.%d_%H:%M:%S')
+            request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_id']+timestamp+'.csv')
             
             answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_id']+'.csv' , delimiter=',', skiprows=1, dtype=str)
             score = accuracy_score(correct, answer) * 100
             
             save_score(student_number,score)
             return render_template('results.html',
-                                   student_name=request.form['student_id'],
+                                   student_name=request.form['student_name'],
                                     score=score,
                                     rank = get_current_ranking(student_number, score))
                                     # prediction=y,
