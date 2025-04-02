@@ -40,9 +40,24 @@ def sqlite_entry(path, document, y):
 
 
 def login(student_number, password):
+    if User.query.filter_by(userid=student_number).first():
+        user = User.query.filter_by(userid=student_number).first()
+        # login susccess
+        if user.password == password:
+            return True
+        # login failed
+        else:
+            return False
+    else:
+        # signup success
+        if signup(student_number, password):
+            return True
+        # signup failed
+        else: return False
+        
+def signup(student_number, password):
     try:
         new_user = User(userid=student_number, password = password)
-        
         
         db.session.add(new_user)
         db.session.commit()
@@ -50,12 +65,6 @@ def login(student_number, password):
     except Exception as e:
         print(e)
     return False
-
-
-def signup(student_number, password):
-    
-    
-    pass
 
 class UploadForm(FlaskForm):
     student_number = TextAreaField('Student Number',
