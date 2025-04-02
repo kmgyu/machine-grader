@@ -158,8 +158,6 @@ def results():
                                    student_name=request.form['student_id'],
                                     score=score,
                                     rank = get_current_ranking(student_number, score))
-                                   student_id=request.form['student_id'],
-                                    score=score)
                                     # prediction=y,
                                     # probability=round(proba*100, 2))
         else: # login failed
