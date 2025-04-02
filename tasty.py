@@ -42,7 +42,7 @@ def sqlite_entry(path, document, y):
 
 
 def login(student_number, password):
-    password = hashlib.sha256(password.encode().hexdigest())
+    password = hashlib.sha256(password.encode()).hexdigest()
     if User.query.filter_by(userid=student_number).first():
         user = User.query.filter_by(userid=student_number).first()
         # login susccess
