@@ -103,6 +103,11 @@ def get_top_scores():
 
     return score_list
 
+def get_colont_ranking(student_number, score_value):
+    """특정 점수에 대한 랭킹을 반환"""
+    scores = Score.query.order_by(Score.score.desc()).all()
+    rank = next((idx + 1 for idx, s in enumerate(scores) if s.userid == student_number and s.score == score_value), None)
+    return rank
 # route
 @app.route('/')
 def index():
