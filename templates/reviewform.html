@@ -1,25 +1,309 @@
 <!doctype html>
-<html>
+<html lang="ko">
   <head>
-    <title>Movie Classification</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>폐암 예측 모델 평가</title>
+    <style>
+      :root {
+        --primary: #4a6bff;
+        --primary-dark: #3a56cc;
+        --secondary: #f8f9fa;
+        --text: #333;
+        --border: #ddd;
+        --shadow: rgba(0, 0, 0, 0.05);
+      }
+      
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
+      body {
+        background-color: #f5f7fd;
+        color: var(--text);
+        line-height: 1.6;
+        padding: 20px;
+      }
+      
+      .container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px var(--shadow);
+        padding: 30px;
+      }
+      
+      h1 {
+        text-align: center;
+        color: var(--primary);
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+      
+      .auth-container {
+        background-color: var(--secondary);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+      }
+      
+      .auth-title {
+        font-size: 18px;
+        color: var(--primary);
+        margin-bottom: 15px;
+        font-weight: 500;
+      }
+      
+      .auth-info {
+        background-color: #fff7e6;
+        border-left: 4px solid #ffab00;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+      }
+      
+      .form-group {
+        margin-bottom: 15px;
+      }
+      
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+      
+      .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 16px;
+      }
+      
+      .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(74, 107, 255, 0.2);
+      }
+      
+      .file-upload-container {
+        background-color: var(--secondary);
+        border: 2px dashed var(--border);
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        margin-bottom: 30px;
+        transition: all 0.3s ease;
+      }
+      
+      .file-upload-container:hover {
+        border-color: var(--primary);
+      }
+      
+      .file-upload-container.has-file {
+        background-color: rgba(74, 107, 255, 0.1);
+        border: 2px solid var(--primary);
+      }
+      
+      .file-icon {
+        font-size: 48px;
+        color: var(--primary);
+        margin-bottom: 10px;
+      }
+      
+      .file-input {
+        display: none;
+      }
+      
+      .file-label {
+        display: inline-block;
+        background-color: var(--primary);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        margin-top: 15px;
+        transition: background-color 0.3s;
+      }
+      
+      .file-label:hover {
+        background-color: var(--primary-dark);
+      }
+      
+      .file-name {
+        margin-top: 15px;
+        font-size: 14px;
+        color: #666;
+      }
+      
+      .file-success {
+        display: none;
+        color: #28a745;
+        font-weight: bold;
+        margin-top: 15px;
+        font-size: 16px;
+      }
+      
+      .file-success i {
+        margin-right: 5px;
+      }
+      
+      .submit-btn {
+        display: block;
+        width: 100%;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.3s;
+      }
+      
+      .submit-btn:hover {
+        background-color: var(--primary-dark);
+      }
+      
+      .info-text {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #666;
+      }
+      
+      .example-container {
+        margin-top: 30px;
+        background-color: var(--secondary);
+        padding: 15px;
+        border-radius: 8px;
+      }
+      
+      .example-container h3 {
+        margin-bottom: 10px;
+        color: var(--primary);
+        font-size: 18px;
+        font-weight: 500;
+      }
+      
+      .example-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      
+      .example-table th, .example-table td {
+        padding: 8px 12px;
+        text-align: left;
+        border: 1px solid var(--border);
+      }
+      
+      .example-table th {
+        background-color: rgba(74, 107, 255, 0.1);
+      }
+    </style>
   </head>
   <body>
-
-<h2>Please enter your movie review:</h2>
-
-{% from "_formhelpers.html" import render_field %}
-
-<form method=post action="/results" enctype="multipart/form-data">
-  <dl>
-    {{form.hidden_tag()}}
-	{{ render_field(form.student_number, cols='30', rows='10') }}
-	{{ render_field(form.answer) }}
-  </dl>
-  <div>
-	  <input type=submit value='Submit review' name='submit_btn'>
-  </div>
-</form>
-
+    <div class="container">
+      <h1>폐암 예측 모델 평가</h1>
+      
+      <form method="post" action="/results" enctype="multipart/form-data">
+        {{ form.hidden_tag() if form }}
+        
+        <div class="auth-container">
+          <div class="auth-info">
+            <p><strong>참고:</strong> 처음 시도할 때 입력한 비밀번호가 해당 학번의 비밀번호로 설정됩니다. 이후 로그인 시 동일한 비밀번호를 사용하세요.</p>
+          </div>
+          
+          <div class="form-group">
+            <label for="student_id">학번</label>
+            <input type="text" id="student_id" name="student_id" class="form-control" required placeholder="학번을 입력하세요">
+          </div>
+          
+          <div class="form-group">
+            <label for="password">비밀번호</label>
+            <input type="password" id="password" name="password" class="form-control" required placeholder="비밀번호를 입력하세요">
+          </div>
+        </div>
+        
+        <div class="file-upload-container">
+          <div class="file-icon">🫁</div>
+          <h2>폐암 진단 데이터 업로드</h2>
+          <p>모델 평가를 위한 CSV 파일을 선택해주세요</p>
+          
+          <input type="file" id="csv_file" name="csv_file" class="file-input" accept=".csv" onchange="updateFileName()">
+          <label for="csv_file" class="file-label">파일 선택</label>
+          
+          <div id="file-name" class="file-name">선택된 파일이 없습니다</div>
+          <div id="file-success" class="file-success"><i>✓</i> 파일이 성공적으로 선택되었습니다!</div>
+        </div>
+        
+        <button type="submit" class="submit-btn" name="submit_btn">모델 성능 평가하기</button>
+        
+        <p class="info-text">CSV 파일은 반드시 PULMONARY_DISEASE 열만 포함되어야 합니다</p>
+      </form>
+      
+      <div class="example-container">
+        <h3>CSV 파일 예시 형식</h3>
+        <table class="example-table">
+          <thead>
+            <tr>
+              <th>PULMONARY_DISEASE</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>YES</td>
+            </tr>
+            <tr>
+              <td>YES</td>
+            </tr>
+            <tr>
+              <td>NO</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <script>
+      function updateFileName() {
+        const input = document.getElementById('csv_file');
+        const fileNameDisplay = document.getElementById('file-name');
+        const fileSuccess = document.getElementById('file-success');
+        const uploadContainer = document.querySelector('.file-upload-container');
+        
+        if (input.files.length > 0) {
+          // 파일 선택 성공 시 화면 변경
+          fileNameDisplay.textContent = input.files[0].name;
+          fileNameDisplay.style.fontWeight = 'bold';
+          fileNameDisplay.style.color = 'var(--primary)';
+          
+          // 성공 메시지 표시
+          fileSuccess.style.display = 'block';
+          
+          // 컨테이너 스타일 변경
+          uploadContainer.classList.add('has-file');
+          
+          // 애니메이션 효과
+          uploadContainer.style.transform = 'scale(1.02)';
+          setTimeout(() => {
+            uploadContainer.style.transform = 'scale(1)';
+          }, 300);
+        } else {
+          fileNameDisplay.textContent = '선택된 파일이 없습니다';
+          fileNameDisplay.style.fontWeight = 'normal';
+          fileNameDisplay.style.color = '#666';
+          fileSuccess.style.display = 'none';
+          uploadContainer.classList.remove('has-file');
+        }
+      }
+    </script>
   </body>
 </html>
