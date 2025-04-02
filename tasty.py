@@ -111,7 +111,9 @@ def get_current_ranking(student_number, score_value):
     '''
     """특정 점수에 대한 랭킹을 반환"""
     scores = Score.query.order_by(Score.score.desc()).all()
-    rank = next((idx + 1 for idx, s in enumerate(scores) if s.userid == student_number and s.score == score_value), None)
+    # print(scores, score_value, student_number, type(student_number))
+    rank = list(idx + 1 for idx, s in enumerate(scores) if s.userid == int(student_number) and s.score == score_value)[-1]
+    # print(rank)
     return rank
 
 # route
@@ -137,6 +139,7 @@ def results():
             score = accuracy_score(correct, answer) * 100
             
             save_score(student_number,score)
+            print(get_current_ranking(student_number, score))
             return render_template('results.html',
                                    student_id=request.form['student_id'],
                                     score=score,
