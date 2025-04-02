@@ -3,11 +3,9 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 from wtforms import TextAreaField, validators
-# import pickle
 import sqlite3
 import os
 import numpy as np
-# from vectorizer import vect
 from sklearn.metrics import accuracy_score
 from models import db, User, Score
 
