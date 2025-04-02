@@ -3,18 +3,18 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 from wtforms import TextAreaField, validators
-import pickle
+# import pickle
 import sqlite3
 import os
 import numpy as np
-from vectorizer import vect
+# from vectorizer import vect
 from sklearn.metrics import accuracy_score
 
 
 app = Flask(__name__)
 app.secret_key = 'development key'
 
-FILE_PATH = './ch09/movieclassifier_with_update/'
+FILE_PATH = './'
 
 correct = np.loadtxt(FILE_PATH + 'correct/correct.csv', delimiter=',', skiprows=1, dtype=str)
 
