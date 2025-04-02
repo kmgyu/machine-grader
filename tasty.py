@@ -11,6 +11,8 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 from models import db, User, Score
 
+import hashlib
+
 app = Flask(__name__)
 # app.secret_key = 'development key'
 
@@ -40,6 +42,7 @@ def sqlite_entry(path, document, y):
 
 
 def login(student_number, password):
+    password = hashlib.sha256(password.encode().hexdigest())
     if User.query.filter_by(userid=student_number).first():
         user = User.query.filter_by(userid=student_number).first()
         # login susccess
