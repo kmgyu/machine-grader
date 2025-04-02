@@ -77,7 +77,7 @@ def save_score(student_number, score_value):
     """점수를 새로 저장 (기존 점수와 상관없이 무조건 추가)"""
     user = User.query.filter_by(userid=student_number).first()  # 학생 번호로 User 찾기
     if user:  
-        new_score = Score(user_id=user.id, score=score_value)  # user.id 저장
+        new_score = Score(userid=user.userid, score=score_value)  # user.id 저장
         db.session.add(new_score)
         db.session.commit()
     else:
@@ -92,7 +92,7 @@ def get_top_scores():
         {
             "rank": idx + 1, 
             "student_id": s.userid, 
-            "score": round(s.score * 100, 2),  # 퍼센트 변환
+            "score": round(s.score, 2),  # 퍼센트 변환
             "tries": Score.query.filter_by(userid=s.userid).count()  # 유저의 시도 횟수
         } 
         for idx, s in enumerate(top_scores)
@@ -105,7 +105,7 @@ def get_top_scores():
 def index():
     # form = UploadForm()
     # return render_template('reviewform.html', form=form)
-    return render_template('reviewform.html')
+    return render_template('reviewform.html', rankings = get_top_scores())
 
 @app.route('/results', methods=['POST'])
 def results():
@@ -115,7 +115,7 @@ def results():
     if request.method == 'POST' and 'answer' in request.files and request.files['answer'].filename != '':
         print('fuck')
         
-        student_number = request.form['student_number']
+        student_number = request.form['student_id']
         if login(request.form['student_id'], request.form['password']):
             # print(request.files)
             request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_id']+'.csv')

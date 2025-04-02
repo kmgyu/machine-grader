@@ -6,12 +6,15 @@
     <title>폐암 예측 모델 평가</title>
     <style>
       :root {
-        --primary: #4a6bff;
+        --primary: #333;
         --primary-dark: #3a56cc;
         --secondary: #f8f9fa;
         --text: #333;
         --border: #ddd;
         --shadow: rgba(0, 0, 0, 0.05);
+        --gold: #FFD700;
+        --silver: #C0C0C0;
+        --bronze: #CD7F32;
       }
       
       * {
@@ -29,12 +32,28 @@
       }
       
       .container {
-        max-width: 800px;
+        max-width: 1200px;
         margin: 40px auto;
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 30px;
+      }
+      
+      .main-content {
         background: white;
         border-radius: 12px;
         box-shadow: 0 8px 30px var(--shadow);
         padding: 30px;
+      }
+      
+      .ranking-sidebar {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px var(--shadow);
+        padding: 25px;
+        align-self: start;
+        position: sticky;
+        top: 20px;
       }
       
       h1 {
@@ -207,66 +226,186 @@
       .example-table th {
         background-color: rgba(74, 107, 255, 0.1);
       }
+      
+      .ranking-title {
+        font-size: 20px;
+        color: var(--primary);
+        margin-bottom: 20px;
+        font-weight: 600;
+        text-align: center;
+        border-bottom: 2px solid var(--primary);
+        padding-bottom: 10px;
+      }
+      
+      .ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      
+      .ranking-table th {
+        background-color: rgba(74, 107, 255, 0.1);
+        padding: 10px;
+        text-align: center;
+        border-bottom: 2px solid var(--border);
+        font-weight: 600;
+      }
+      
+      .ranking-table td {
+        padding: 12px 8px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+      }
+      
+      .ranking-table tr:last-child td {
+        border-bottom: none;
+      }
+      
+      .ranking-table tr:hover {
+        background-color: rgba(74, 107, 255, 0.05);
+      }
+      
+      .rank-number {
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        color: white;
+      }
+      
+      .rank-1 {
+        background-color: var(--gold);
+      }
+      
+      .rank-2 {
+        background-color: var(--silver);
+      }
+      
+      .rank-3 {
+        background-color: var(--bronze);
+      }
+      
+      .rank-other {
+        background-color: var(--primary);
+      }
+      
+      .score-value {
+        font-weight: bold;
+        color: var(--primary-dark);
+      }
+      
+      .tries-count {
+        color: #666;
+        font-size: 12px;
+      }
+      
+      @media (max-width: 1000px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+        
+        .ranking-sidebar {
+          position: static;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>폐암 예측 모델 평가</h1>
-      
-      <form method="post" action="/results" enctype="multipart/form-data">
-        {{ form.hidden_tag() if form }}
+      <div class="main-content">
+        <h1>폐암 예측 모델 평가</h1>
         
-        <div class="auth-container">
-          <div class="auth-info">
-            <p><strong>참고:</strong> 처음 시도할 때 입력한 비밀번호가 해당 학번의 비밀번호로 설정됩니다. 이후 로그인 시 동일한 비밀번호를 사용하세요.</p>
+        <form method="post" action="/results" enctype="multipart/form-data">
+          {{ form.hidden_tag() if form }}
+          
+          <div class="auth-container">
+            <div class="auth-info">
+              <p><strong>참고:</strong> 처음 시도할 때 입력한 비밀번호가 해당 학번의 비밀번호로 설정됩니다. 이후 로그인 시 동일한 비밀번호를 사용하세요.</p>
+            </div>
+            
+            <div class="form-group">
+              <label for="student_id">학번</label>
+              <input type="text" id="student_id" name="student_id" class="form-control" required placeholder="학번을 입력하세요">
+            </div>
+            
+            <div class="form-group">
+              <label for="password">비밀번호</label>
+              <input type="password" id="password" name="password" class="form-control" required placeholder="비밀번호를 입력하세요">
+            </div>
           </div>
           
-          <div class="form-group">
-            <label for="student_id">학번</label>
-            <input type="text" id="student_id" name="student_id" class="form-control" required placeholder="학번을 입력하세요">
+          <div class="file-upload-container">
+            <div class="file-icon">🫁</div>
+            <h2>폐암 진단 데이터 업로드</h2>
+            <p>모델 평가를 위한 CSV 파일을 선택해주세요</p>
+            <input type="file" id="csv_file" name="answer" class="file-input" accept=".csv" onchange="updateFileName()">
+            <label for="csv_file" class="file-label">파일 선택</label>
+            
+            <div id="file-name" class="file-name">선택된 파일이 없습니다</div>
+            <div id="file-success" class="file-success"><i>✓</i> 파일이 성공적으로 선택되었습니다!</div>
           </div>
           
-          <div class="form-group">
-            <label for="password">비밀번호</label>
-            <input type="password" id="password" name="password" class="form-control" required placeholder="비밀번호를 입력하세요">
-          </div>
+          <button type="submit" class="submit-btn" name="submit_btn">모델 성능 평가하기</button>
+          
+          <p class="info-text">CSV 파일은 반드시 PULMONARY_DISEASE 열만 포함되어야 합니다</p>
+        </form>
+        
+        <div class="example-container">
+          <h3>CSV 파일 예시 형식</h3>
+          <table class="example-table">
+            <thead>
+              <tr>
+                <th>PULMONARY_DISEASE</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>YES</td>
+              </tr>
+              <tr>
+                <td>YES</td>
+              </tr>
+              <tr>
+                <td>NO</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        
-        <div class="file-upload-container">
-          <div class="file-icon">🫁</div>
-          <h2>폐암 진단 데이터 업로드</h2>
-          <p>모델 평가를 위한 CSV 파일을 선택해주세요</p>
-          
-          <input type="file" id="csv_file" name="answer" class="file-input" accept=".csv" onchange="updateFileName()">
-          <label for="csv_file" class="file-label">파일 선택</label>
-          
-          <div id="file-name" class="file-name">선택된 파일이 없습니다</div>
-          <div id="file-success" class="file-success"><i>✓</i> 파일이 성공적으로 선택되었습니다!</div>
-        </div>
-        
-        <button type="submit" class="submit-btn" name="submit_btn">모델 성능 평가하기</button>
-        
-        <p class="info-text">CSV 파일은 반드시 PULMONARY_DISEASE 열만 포함되어야 합니다</p>
-      </form>
+      </div>
       
-      <div class="example-container">
-        <h3>CSV 파일 예시 형식</h3>
-        <table class="example-table">
+      <div class="ranking-sidebar">
+        <h2 class="ranking-title">현재 랭킹</h2>
+        <table class="ranking-table">
           <thead>
             <tr>
-              <th>PULMONARY_DISEASE</th>
+              <th>순위</th>
+              <th>학번</th>
+              <th>점수</th>
+              <th>시도</th>
             </tr>
           </thead>
           <tbody>
+            {% for ranking in rankings %}
             <tr>
-              <td>YES</td>
+              <td>
+                {% if ranking.rank == 1 %}
+                <span class="rank-number rank-1">1</span>
+                {% elif ranking.rank == 2 %}
+                <span class="rank-number rank-2">2</span>
+                {% elif ranking.rank == 3 %}
+                <span class="rank-number rank-3">3</span>
+                {% else %}
+                <span class="rank-number rank-other">{{ ranking.rank }}</span>
+                {% endif %}
+              </td>
+              <td>{{ ranking.student_id }}</td>
+              <td class="score-value">{{ ranking.score }}%</td>
+              <td class="tries-count">{{ ranking.tries }}회</td>
             </tr>
-            <tr>
-              <td>YES</td>
-            </tr>
-            <tr>
-              <td>NO</td>
-            </tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
@@ -304,6 +443,33 @@
           uploadContainer.classList.remove('has-file');
         }
       }
+      
+      // 폼 제출 시 파일 유효성 검사
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        
+        form.addEventListener('submit', function(event) {
+          const fileInput = document.getElementById('csv_file');
+          
+          // 파일이 선택되지 않았으면 제출 중단
+          if (fileInput.files.length === 0) {
+            event.preventDefault();
+            
+            // 파일 업로드 컨테이너 강조 표시
+            const uploadContainer = document.querySelector('.file-upload-container');
+            uploadContainer.style.borderColor = '#dc3545';
+            uploadContainer.style.backgroundColor = 'rgba(220, 53, 69, 0.05)';
+            
+            // 스크롤을 파일 업로드 영역으로 이동
+            uploadContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // 경고 메시지 표시
+            alert('CSV 파일을 선택해주세요!');
+            
+            return false;
+          }
+        });
+      });
     </script>
   </body>
 </html>
