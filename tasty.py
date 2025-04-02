@@ -14,7 +14,7 @@ from models import db, User, Score
 app = Flask(__name__)
 # app.secret_key = 'development key'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///score.db'  # 혹은 MySQL 등으로 변경
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///score.sqlite'  # 혹은 MySQL 등으로 변경
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'super-secret-key'
 
@@ -76,27 +76,30 @@ class UploadForm(FlaskForm):
 # route
 @app.route('/')
 def index():
-    form = UploadForm()
-    return render_template('reviewform.html', form=form)
+    # form = UploadForm()
+    # return render_template('reviewform.html', form=form)
+    return render_template('reviewform.html')
 
 @app.route('/results', methods=['POST'])
 def results():
     # print('we posted')
-    form = UploadForm()
+    # form = UploadForm()
     # print(load(request.form))
-    print(request.form)
-    if request.method == 'POST' and form.validate_on_submit():
+    if request.method == 'POST' and request.files:
+        print('fuck')
+        if login(request.form['student_id'], request.form['password']):
+            # print(request.files)
+            request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_id']+'.csv')
+            answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_id']+'.csv' , delimiter=',', skiprows=1, dtype=str)
+            score = accuracy_score(correct, answer)
+            
+            return render_template('results.html',
+                                    score=score)
+                                    # prediction=y,
+                                    # probability=round(proba*100, 2))
         
-        print(request.files)
-        request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_number']+'.csv')
-        answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_number']+'.csv' , delimiter=',', skiprows=1, dtype=str)
-        score = accuracy_score(correct, answer)
-        
-        return render_template('results.html',
-                                score=score)
-                                # prediction=y,
-                                # probability=round(proba*100, 2))
-    return render_template('reviewform.html', form=form)
+    return render_template('reviewform.html')
+    # return render_template('reviewform.html', form=form)
 
 
 
