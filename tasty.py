@@ -14,7 +14,6 @@ from models import db, User, Score
 import hashlib
 
 app = Flask(__name__)
-# app.secret_key = 'development key'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///score.sqlite'  # 혹은 MySQL 등으로 변경
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -122,31 +121,22 @@ def get_current_ranking(student_number, score_value):
     '''
     """특정 점수에 대한 랭킹을 반환"""
     scores = Score.query.order_by(Score.score.desc()).all()
-    # print(scores, score_value, student_number, type(student_number))
     rank = list(idx + 1 for idx, s in enumerate(scores) if s.userid == int(student_number) and s.score == score_value)[-1]
-    # print(rank)
     return rank
 
 # route
 @app.route('/')
 def index():
-    # form = UploadForm()
-    # return render_template('reviewform.html', form=form)
     return render_template('reviewform.html', rankings = get_top_scores())
 
 @app.route('/results', methods=['POST'])
 def results():
-    # print('we posted')
-    # form = UploadForm()
-    # print(load(request.form))
     if request.method == 'POST' and 'answer' in request.files and request.files['answer'].filename != '':
-        # print('fuck')
         
         student_number = request.form['student_id']
         condition = login(request.form['student_id'], request.form['student_name'], request.form['password'])
         
         if login(request.form['student_id'], request.form['student_name'], request.form['password']):
-            # print(request.files)
             
             # save file
             from datetime import datetime
@@ -161,14 +151,11 @@ def results():
                                    student_name=request.form['student_name'],
                                     score=score,
                                     rank = get_current_ranking(student_number, score))
-                                    # prediction=y,
-                                    # probability=round(proba*100, 2))
         else: # login failed
             flash('비밀번호가 틀렸거나 이름이 틀립니다.')
             return redirect('/')
         
     return render_template('reviewform.html')
-    # return render_template('reviewform.html', form=form)
 
 
 
