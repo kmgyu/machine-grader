@@ -9,23 +9,53 @@ import os
 import numpy as np
 # from vectorizer import vect
 from sklearn.metrics import accuracy_score
-
+from models import db, User, Score
 
 app = Flask(__name__)
-app.secret_key = 'development key'
+# app.secret_key = 'development key'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///score.db'  # 혹은 MySQL 등으로 변경
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'super-secret-key'
+
+
+db.init_app(app)
+
+# 첫 실행 시에만 실행
+with app.app_context():
+    db.create_all()
 
 FILE_PATH = './'
 
 correct = np.loadtxt(FILE_PATH + 'correct/correct.csv', delimiter=',', skiprows=1, dtype=str)
 
 
-# def sqlite_entry(path, document, y):
-#     conn = sqlite3.connect(path)
-#     c = conn.cursor()
-#     c.execute("INSERT INTO review_db (review, sentiment, date)"\
-#     " VALUES (?, ?, DATETIME('now'))", (document, y))
-#     conn.commit()
-#     conn.close()
+def sqlite_entry(path, document, y):
+    conn = sqlite3.connect(path)
+    c = conn.cursor()
+    c.execute("INSERT INTO review_db (review, sentiment, date)"\
+    " VALUES (?, ?, DATETIME('now'))", (document, y))
+    conn.commit()
+    conn.close()
+
+
+def login(student_number, password):
+    try:
+        new_user = User(userid=student_number, password = password)
+        
+        
+        db.session.add(new_user)
+        db.session.commit()
+        return True
+    except Exception as e:
+        print(e)
+    return False
+
+
+def signup(student_number, password):
+    
+    
+    pass
 
 class UploadForm(FlaskForm):
     student_number = TextAreaField('Student Number',
@@ -47,6 +77,7 @@ def results():
     # print(load(request.form))
     print(request.form)
     if request.method == 'POST' and form.validate_on_submit():
+        
         print(request.files)
         request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_number']+'.csv')
         answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_number']+'.csv' , delimiter=',', skiprows=1, dtype=str)
