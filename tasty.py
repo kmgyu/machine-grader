@@ -91,7 +91,7 @@ def results():
             # print(request.files)
             request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_id']+'.csv')
             answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_id']+'.csv' , delimiter=',', skiprows=1, dtype=str)
-            score = accuracy_score(correct, answer)
+            score = accuracy_score(correct, answer) * 100
             
             return render_template('results.html',
                                    student_id=request.form['student_id'],
