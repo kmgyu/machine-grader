@@ -91,16 +91,20 @@ def get_top_scores():
     """점수가 높은 순서대로 상위 10개 반환 (학생별 최고 점수 기준)"""
     
     # 학생별 최고 점수를 찾기 위한 서브쿼리 (각 학생의 최고 점수만 선택)
-    subquery = db.session.query(Score.userid, db.session.query(Score.score)
-                                .filter(Score.userid == Score.userid)
-                                .order_by(Score.score.desc())
-                                .limit(1)
-                                .as_scalar()
-                               ).distinct(Score.userid).subquery()
+    subquery = db.session.query(
+        Score.userid, 
+        db.session.query(Score.score)  # 해당 학생의 최고 점수를 찾음
+        .filter(Score.userid == Score.userid)  
+        .order_by(Score.score.desc())  
+        .limit(1)  
+        .scalar_subquery()  
+    ).group_by(Score.userid).subquery()
 
     # 메인 쿼리: 학생별 최고 점수를 가져와 상위 10명을 반환
     top_scores = db.session.query(Score.userid, Score.score)\
-                           .filter((Score.userid, Score.score).in_(db.session.query(subquery.c.userid, subquery.c.score)))\
+                           .filter((Score.userid, Score.score).in_(
+                               db.session.query(subquery.c.userid, subquery.c.score)
+                           ))\
                            .order_by(Score.score.desc())\
                            .limit(10).all()
     
