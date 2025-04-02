@@ -89,7 +89,14 @@ def save_score(student_number, score_value):
 @app.route('/top_scores')
 def get_top_scores():
     """점수가 높은 순서대로 상위 10개 반환"""
-    top_scores = Score.query.order_by(Score.score.desc()).limit(10).all()
+    # top_scores = Score.query.order_by(Score.score.desc()).limit(10).all()
+    subquery = db.session.query(Score.userid, db.func.max(Score.score).label("max_score"))
+    subquery = subquery.group_by(Score.userid).subquery()
+
+    # 메인 쿼리: 학생별 최고 점수를 가져와 상위 10명을 반환
+    top_scores = db.session.query(Score.userid, Score.score)
+    top_scores = top_scores.join(subquery, (Score.userid == subquery.c.userid) & (Score.score == subquery.c.max_score))
+    top_scores = top_scores.order_by(Score.score.desc()).limit(10).all()
     
     score_list = [
         {
