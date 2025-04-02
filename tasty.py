@@ -148,7 +148,7 @@ def results():
             save_score(student_number,score)
             print(get_current_ranking(student_number, score))
             return render_template('results.html',
-                                   student_id=request.form['student_id'],
+                                   student_name=request.form['student_id'],
                                     score=score,
                                     rank = get_current_ranking(student_number, score))
                                     # prediction=y,
