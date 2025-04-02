@@ -139,7 +139,8 @@ def results():
             save_score(student_number,score)
             return render_template('results.html',
                                    student_id=request.form['student_id'],
-                                    score=score)
+                                    score=score,
+                                    rank = get_current_ranking(student_number, score))
                                     # prediction=y,
                                     # probability=round(proba*100, 2))
         else: # login failed
