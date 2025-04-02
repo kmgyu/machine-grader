@@ -94,6 +94,7 @@ def results():
             score = accuracy_score(correct, answer)
             
             return render_template('results.html',
+                                   student_id=request.form['student_id'],
                                     score=score)
                                     # prediction=y,
                                     # probability=round(proba*100, 2))
