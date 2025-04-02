@@ -88,15 +88,21 @@ def save_score(student_number, score_value):
 
 @app.route('/top_scores')
 def get_top_scores():
-    """점수가 높은 순서대로 상위 10개 반환"""
-    # top_scores = Score.query.order_by(Score.score.desc()).limit(10).all()
-    subquery = db.session.query(Score.userid, db.func.max(Score.score).label("max_score"))
-    subquery = subquery.group_by(Score.userid).subquery()
+    """점수가 높은 순서대로 상위 10개 반환 (학생별 최고 점수 기준)"""
+    
+    # 학생별 최고 점수를 찾기 위한 서브쿼리 (각 학생의 최고 점수만 선택)
+    subquery = db.session.query(Score.userid, db.session.query(Score.score)
+                                .filter(Score.userid == Score.userid)
+                                .order_by(Score.score.desc())
+                                .limit(1)
+                                .as_scalar()
+                               ).distinct(Score.userid).subquery()
 
     # 메인 쿼리: 학생별 최고 점수를 가져와 상위 10명을 반환
-    top_scores = db.session.query(Score.userid, Score.score)
-    top_scores = top_scores.join(subquery, (Score.userid == subquery.c.userid) & (Score.score == subquery.c.max_score))
-    top_scores = top_scores.order_by(Score.score.desc()).limit(10).all()
+    top_scores = db.session.query(Score.userid, Score.score)\
+                           .filter((Score.userid, Score.score).in_(db.session.query(subquery.c.userid, subquery.c.score)))\
+                           .order_by(Score.score.desc())\
+                           .limit(10).all()
     
     score_list = [
         {
@@ -118,9 +124,7 @@ def get_current_ranking(student_number, score_value):
     '''
     """특정 점수에 대한 랭킹을 반환"""
     scores = Score.query.order_by(Score.score.desc()).all()
-    # print(scores, score_value, student_number, type(student_number))
-    rank = list(idx + 1 for idx, s in enumerate(scores) if s.userid == int(student_number) and s.score == score_value)[-1]
-    # print(rank)
+    rank = next((idx + 1 for idx, s in enumerate(scores) if s.userid == student_number and s.score == score_value), None)
     return rank
 
 # route
@@ -146,15 +150,13 @@ def results():
             score = accuracy_score(correct, answer) * 100
             
             save_score(student_number,score)
-            print(get_current_ranking(student_number, score))
             return render_template('results.html',
                                    student_id=request.form['student_id'],
-                                    score=score,
-                                    rank = get_current_ranking(student_number, score))
+                                    score=score)
                                     # prediction=y,
                                     # probability=round(proba*100, 2))
         else: # login failed
-            flash('비밀번호가 틀렸습니다.', category='error')
+            flash('비밀번호가 틀렸습니다.')
             return redirect('/')
         
     return render_template('reviewform.html')
