@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
@@ -131,6 +131,8 @@ def results():
                                     score=score)
                                     # prediction=y,
                                     # probability=round(proba*100, 2))
+        else: # login failed
+            return redirect('/')
         
     return render_template('reviewform.html')
     # return render_template('reviewform.html', form=form)
