@@ -85,7 +85,7 @@ def results():
     # print('we posted')
     # form = UploadForm()
     # print(load(request.form))
-    if request.method == 'POST' and request.files:
+    if request.method == 'POST' and 'answer' in request.files and request.files['answer'].filename != '':
         print('fuck')
         if login(request.form['student_id'], request.form['password']):
             # print(request.files)
