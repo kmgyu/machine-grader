@@ -14,7 +14,7 @@ from models import db, User, Score
 app = Flask(__name__)
 # app.secret_key = 'development key'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///score.db'  # 혹은 MySQL 등으로 변경
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///score.sqlite'  # 혹은 MySQL 등으로 변경
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'super-secret-key'
 
@@ -103,29 +103,34 @@ def get_top_scores():
 # route
 @app.route('/')
 def index():
-    form = UploadForm()
-    return render_template('reviewform.html', form=form)
+    # form = UploadForm()
+    # return render_template('reviewform.html', form=form)
+    return render_template('reviewform.html')
 
 @app.route('/results', methods=['POST'])
 def results():
     # print('we posted')
-    form = UploadForm()
+    # form = UploadForm()
     # print(load(request.form))
-    print(request.form)
-    if request.method == 'POST' and form.validate_on_submit():
-        student_number = request.form['student_number']
-
-        print(request.files)
-        request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_number']+'.csv')
-        answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_number']+'.csv' , delimiter=',', skiprows=1, dtype=str)
-        score = accuracy_score(correct, answer)
+    if request.method == 'POST' and 'answer' in request.files and request.files['answer'].filename != '':
+        print('fuck')
         
-        save_score(student_number,score)
-        return render_template('results.html',
-                                score=score)
-                                # prediction=y,
-                                # probability=round(proba*100, 2))
-    return render_template('reviewform.html', form=form)
+        student_number = request.form['student_number']
+        if login(request.form['student_id'], request.form['password']):
+            # print(request.files)
+            request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_id']+'.csv')
+            answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_id']+'.csv' , delimiter=',', skiprows=1, dtype=str)
+            score = accuracy_score(correct, answer) * 100
+            
+            save_score(student_number,score)
+            return render_template('results.html',
+                                   student_id=request.form['student_id'],
+                                    score=score)
+                                    # prediction=y,
+                                    # probability=round(proba*100, 2))
+        
+    return render_template('reviewform.html')
+    # return render_template('reviewform.html', form=form)
 
 
 
