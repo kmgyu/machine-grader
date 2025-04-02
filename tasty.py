@@ -20,6 +20,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///score.sqlite'  # 혹은 MySQL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'super-secret-key'
 
+PORT = 3000 # Your Port >_0 -☆
 
 db.init_app(app)
 
@@ -172,4 +173,4 @@ def results():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=PORT)
