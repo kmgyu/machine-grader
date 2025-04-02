@@ -90,28 +90,43 @@ def save_score(student_number, score_value):
 def get_top_scores():
     """점수가 높은 순서대로 상위 10개 반환 (학생별 최고 점수 기준)"""
     
-    # 학생별 최고 점수를 찾기 위한 서브쿼리 (각 학생의 최고 점수만 선택)
-    subquery = db.session.query(
-        Score.userid, 
-        db.session.query(Score.score)  # 해당 학생의 최고 점수를 찾음
-        .filter(Score.userid == Score.userid)  
-        .order_by(Score.score.desc())  
-        .limit(1)  
-        .scalar_subquery()  
-    ).group_by(Score.userid).subquery()
+    # # 학생별 최고 점수를 찾기 위한 서브쿼리 (각 학생의 최고 점수만 선택)
+    # subquery = db.session.query(
+    #     Score.userid, 
+    #     db.session.query(Score.score)  # 해당 학생의 최고 점수를 찾음
+    #     .filter(Score.userid == Score.userid)  
+    #     .order_by(Score.score.desc())  
+    #     .limit(1)  
+    #     .scalar_subquery()  
+    # ).group_by(Score.userid).subquery()
 
-    # 메인 쿼리: 학생별 최고 점수를 가져와 상위 10명을 반환
-    top_scores = db.session.query(Score.userid, Score.score)\
-                           .filter((Score.userid, Score.score).in_(
-                               db.session.query(subquery.c.userid, subquery.c.score)
-                           ))\
-                           .order_by(Score.score.desc())\
-                           .limit(10).all()
+    # # 메인 쿼리: 학생별 최고 점수를 가져와 상위 10명을 반환
+    # # top_scores = db.session.query(Score.userid, Score.score)\
+    # #                        .filter((Score.userid, Score.score).in_(
+    # #                            db.session.query(subquery.c.userid, subquery.c.score)
+    # #                        ))\
+    # #                        .order_by(Score.score.desc())\
+    # #                        .limit(10).all()
+    # top_scores = db.session.query(Score.userid, Score.score)\
+    #     .join(subquery, (Score.userid == subquery.c.userid) & (Score.score == subquery.c.score))\
+    #     .order_by(Score.score.desc())\
+    #     .limit(10).all()
+    subquery = db.session.query(Score.userid, Score.score)\
+    .filter(Score.score >= 80)\
+    .subquery()
+
+    top_scores = db.session.query(Score.userid, Score.score, Score.username)\
+        .select_from(Score)\
+        .join(subquery, (Score.userid == subquery.c.userid) & (Score.score == subquery.c.score))\
+        .order_by(Score.score.desc())\
+        .limit(10)\
+        .all()
     
     score_list = [
         {
             "rank": idx + 1, 
             "student_id": s.userid, 
+            "student_name": s.username,
             "score": round(s.score, 2),  # 퍼센트 변환
             "tries": Score.query.filter_by(userid=s.userid).count()  # 유저의 시도 횟수
         } 
@@ -128,7 +143,9 @@ def get_current_ranking(student_number, score_value):
     '''
     """특정 점수에 대한 랭킹을 반환"""
     scores = Score.query.order_by(Score.score.desc()).all()
-    rank = next((idx + 1 for idx, s in enumerate(scores) if s.userid == student_number and s.score == score_value), None)
+    # print(scores, score_value, student_number, type(student_number))
+    rank = list(idx + 1 for idx, s in enumerate(scores) if s.userid == int(student_number) and s.score == score_value)[-1]
+    # print(rank)
     return rank
 
 # route
@@ -154,10 +171,10 @@ def results():
             
             # save file
             from datetime import datetime
-            timestamp = datetime.now().strftime('%Y.%m.%d_%H:%M:%S')
-            request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_id']+timestamp+'.csv')
+            timestamp = datetime.now().strftime('%Y.%m.%d_%H-%M-%S')
+            request.files['answer'].save(FILE_PATH + 'answers/'+request.form['student_id']+'_'+timestamp+'.csv')
             
-            answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_id']+'.csv' , delimiter=',', skiprows=1, dtype=str)
+            answer = np.loadtxt(FILE_PATH + 'answers/'+request.form['student_id']+'_'+timestamp+'.csv' , delimiter=',', skiprows=1, dtype=str)
             score = accuracy_score(correct, answer) * 100
             
             save_score(student_number,score)
