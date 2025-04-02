@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
@@ -103,11 +103,17 @@ def get_top_scores():
 
     return score_list
 
-def get_colont_ranking(student_number, score_value):
+def get_current_ranking(student_number, score_value):
+    '''
+    @KimSummerRain
+    current? No! 'colont'
+    ㅋㅋㅋㅋㅋㅋㅋ
+    '''
     """특정 점수에 대한 랭킹을 반환"""
     scores = Score.query.order_by(Score.score.desc()).all()
     rank = next((idx + 1 for idx, s in enumerate(scores) if s.userid == student_number and s.score == score_value), None)
     return rank
+
 # route
 @app.route('/')
 def index():
@@ -137,6 +143,7 @@ def results():
                                     # prediction=y,
                                     # probability=round(proba*100, 2))
         else: # login failed
+            flash('비밀번호가 틀렸습니다.')
             return redirect('/')
         
     return render_template('reviewform.html')
