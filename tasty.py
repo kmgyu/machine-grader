@@ -90,37 +90,15 @@ def save_score(student_number, score_value):
 def get_top_scores():
     """점수가 높은 순서대로 상위 10개 반환 (학생별 최고 점수 기준)"""
     
-    # # 학생별 최고 점수를 찾기 위한 서브쿼리 (각 학생의 최고 점수만 선택)
-    # subquery = db.session.query(
-    #     Score.userid, 
-    #     db.session.query(Score.score)  # 해당 학생의 최고 점수를 찾음
-    #     .filter(Score.userid == Score.userid)  
-    #     .order_by(Score.score.desc())  
-    #     .limit(1)  
-    #     .scalar_subquery()  
-    # ).group_by(Score.userid).subquery()
-
-    # # 메인 쿼리: 학생별 최고 점수를 가져와 상위 10명을 반환
-    # # top_scores = db.session.query(Score.userid, Score.score)\
-    # #                        .filter((Score.userid, Score.score).in_(
-    # #                            db.session.query(subquery.c.userid, subquery.c.score)
-    # #                        ))\
-    # #                        .order_by(Score.score.desc())\
-    # #                        .limit(10).all()
-    # top_scores = db.session.query(Score.userid, Score.score)\
-    #     .join(subquery, (Score.userid == subquery.c.userid) & (Score.score == subquery.c.score))\
-    #     .order_by(Score.score.desc())\
-    #     .limit(10).all()
-    subquery = db.session.query(Score.userid, Score.score)\
-    .filter(Score.score >= 80)\
-    .subquery()
-
-    top_scores = db.session.query(Score.userid, Score.score, Score.username)\
-        .select_from(Score)\
-        .join(subquery, (Score.userid == subquery.c.userid) & (Score.score == subquery.c.score))\
-        .order_by(Score.score.desc())\
-        .limit(10)\
-        .all()
+    from sqlalchemy import func
+    top_scores = db.session.query(
+            Score.userid,
+            Score.username,
+            func.max(Score.score).label('score'),
+            func.count().label('attempts')
+        ).group_by(Score.userid)\
+        .order_by(func.max(Score.score).desc())\
+        .limit(10)
     
     score_list = [
         {
